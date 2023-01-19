@@ -1,15 +1,21 @@
 import userModels from "../Models/user.models";
+import bcrypt from "bcrypt";
 
 import {Request, Response} from "express";
+
 
 // register:
 export const register = async(req: Request, res: Response): Promise<Response> =>{
     try {
        const {fullname, email, password, stack, isAdmin} = req.body; 
+    //    Password bcyrpt:
+    const salt: string = await bcrypt.genSalt(10);
+    const hashedpassword = await bcrypt.hash(password, salt);
+
        const user = await userModels.create({
         fullname,
         email,
-        password,
+        password: hashedpassword,
         stack,
         isAdmin,
        })
@@ -33,16 +39,27 @@ export const register = async(req: Request, res: Response): Promise<Response> =>
 // Login:
 export const login = async(req: Request, res: Response): Promise<Response> =>{
     try {
-        const {email} = req.body;
+        const {email, password} = req.body;
         const user = await userModels.findOne({email});
         if (!email) {
             return res.status(400).json({
                 status: "Please enter an email"
             })
         }
+        if (!password) {
+            return res.status(400).json({
+                status: "Please enter your password"
+            })
+        }
         if (!user) {
             return res.status(401).json({
-                status: "User not found",
+                status: "User not found, does not exist",
+            })
+        }
+        const checkPassword = await bcrypt.compare(password, user!.password)
+        if (!checkPassword) {
+            return res.status(401).json({
+                status: "Either email or password is not correct",
             })
         }
         return res.status(200).json({
@@ -60,7 +77,7 @@ export const login = async(req: Request, res: Response): Promise<Response> =>{
 // getall:
 export const getUsers = async(req: Request, res: Response): Promise<Response> =>{
     try {
-        const user = await userModels.find();
+        const user = await userModels.find().sort({createdAt: -1});
         return res.status(200).json({
             status: `Successfuly got ${user.length} user(s)`,
             data: user
