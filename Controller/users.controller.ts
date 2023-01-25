@@ -1,7 +1,7 @@
 import userModels from "../Models/user.models";
 import bcrypt from "bcrypt";
 
-import {Request, Response} from "express";
+import { Request, Response } from "express";
 
 
 // register:

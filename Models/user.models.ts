@@ -5,7 +5,7 @@ interface usersData {
     email: string;
     password: string;
     stack: string;
-    isAdmin: string;
+    isAdmin: boolean;
 }
 
 interface iUsersData extends usersData, Document{};
